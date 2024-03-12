@@ -32,6 +32,9 @@ while true; do
     output=$(/home/bitrey/.bun/bin/bun /home/bitrey/Documents/Webdev_Projects/brno-ids-jmk-gtfs/src/index.ts)
     echo $output
     # send output to  >/dev/ttyACM0
+    # first, send random 16 characters to the device
+    echo "0123456789abcdef" >&3
+    # then, send the output of the script
     echo $output >&3
 
     # Attendere 3 minuti
