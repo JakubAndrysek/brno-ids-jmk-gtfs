@@ -1,0 +1,11 @@
+[Unit]
+Description=Send Transport to Serial
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/bitrey/.bun/bin/bun /home/bitrey/Documents/Webdev_Projects/brno-ids-jmk-gtfs/src/index.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
