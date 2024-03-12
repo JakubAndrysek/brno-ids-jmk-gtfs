@@ -1,18 +1,30 @@
 #!/bin/bash
 
-# Funzione per leggere costantemente dalla porta seriale
-read_serial() {
-    echo "Inizio lettura dalla porta seriale..."
-    while true; do
-        cat /dev/ttyACM0
-    done
-}
+# Wait for the device to be connected
+while [ ! -e /dev/ttyACM0 ]; do
+    echo "Waiting for the device to be connected..."
+    sleep 1
+done
 
-# Esegui la funzione di lettura dalla porta seriale in background
-read_serial &
+# Wait for the device to be ready
+while [ ! -r /dev/ttyACM0 ]; do
+    echo "Waiting for the device to be ready..."
+    sleep 1
+done
 
-# Salva il PID del processo di lettura della porta seriale
-PID_SERIAL_READ=$!
+echo "Device is ready!"
+
+# Wait to be sure the device is ready
+sleep 10
+
+# Set the device parameters
+echo "Setting the device parameters..."
+
+# Keep the ttyACM0 device open on fd 3
+exec 3<>/dev/ttyACM0
+stty -F /dev/ttyACM0 9600 cs8 -cstopb -parenb
+# echo "1" >&3 # send data
+cat <&3 & # read the data
 
 # Loop infinito per eseguire lo script esterno ogni 5 minuti
 while true; do
@@ -20,13 +32,7 @@ while true; do
     output=$(/home/bitrey/.bun/bin/bun /home/bitrey/Documents/Webdev_Projects/brno-ids-jmk-gtfs/src/index.ts)
     echo $output
     # send output to  >/dev/ttyACM0
-    echo $output >/dev/ttyACM0
-
-    # Controlla se ci sono stati errori nell'output
-    if [ $? -ne 0 ]; then
-        echo "Errore nell'esecuzione dello script esterno. Terminazione dello script."
-        exit 1
-    fi
+    echo $output >&3
 
     # Attendere 3 minuti
     sleep 180
