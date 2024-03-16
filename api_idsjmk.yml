@@ -1,0 +1,144 @@
+openapi: 3.0.0
+info:
+  title: IDS JMK API
+  description: API per l'accesso ai dati dei trasporti pubblici di IDS JMK
+  version: 1.0.0
+servers:
+  - url: https://mapa.idsjmk.cz/api
+paths:
+  /departures:
+    get:
+      summary: Ottiene gli orari dei bus per una specifica fermata.
+      parameters:
+        - name: stopid
+          in: query
+          required: true
+          description: ID della fermata per cui si desiderano gli orari dei bus.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Risposta riuscita.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusPerFermataResponse'
+        '400':
+          description: Richiesta non valida.
+        '403':
+          description: Accesso rifiutato.
+  /vehicles.json:
+    get:
+      summary: Ottiene informazioni su tutti i veicoli attualmente in servizio.
+      responses:
+        '200':
+          description: Risposta riuscita.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VeicoliResponse'
+        '400':
+          description: Richiesta non valida.
+        '403':
+          description: Accesso rifiutato.
+
+components:
+  schemas:
+    BusPerFermataResponse:
+      type: object
+      properties:
+        StopID:
+          type: integer
+          description: ID della fermata.
+        Message:
+          type: string
+          description: Messaggio informativo relativo alla fermata.
+        PostList:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostItem'
+        FromCache:
+          type: boolean
+          description: Indica se la risposta proviene dalla cache.
+        Warning:
+          type: string
+          description: Messaggio di avvertimento riguardo all'uso dell'API.
+        Error:
+          type: string
+          description: Descrizione dell'eventuale errore.
+    PostItem:
+      type: object
+      properties:
+        PostID:
+          type: integer
+        Name:
+          type: string
+        Departures:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepartureInfo'
+    DepartureInfo:
+      type: object
+      properties:
+        LineName:
+          type: string
+        FinalStop:
+          type: string
+        IsLowFloor:
+          type: boolean
+        TimeMark:
+          type: string
+    VeicoliResponse:
+      type: object
+      properties:
+        LastUpdate:
+          type: string
+          format: date-time
+        Vehicles:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleInfo'
+    VehicleInfo:
+      type: object
+      properties:
+        ID:
+          type: integer
+        IDB:
+          type: integer
+        IDC:
+          type: integer
+        VType:
+          type: integer
+        LType:
+          type: integer
+        Lat:
+          type: number
+          format: float
+        Lng:
+          type: number
+          format: float
+        Bearing:
+          type: integer
+        LineID:
+          type: integer
+        LineName:
+          type: string
+        RouteID:
+          type: integer
+        ServiceId:
+          type: integer
+        Course:
+          type: string
+        LF:
+          type: boolean
+          description: Indica se il veicolo è a pianale ribassato.
+        Delay:
+          type: integer
+        LastStopID:
+          type: integer
+        FinalStopID:
+          type: integer
+        FinalStopName:
+          type: string
+        IsInactive:
+          type: boolean

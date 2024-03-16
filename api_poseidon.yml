@@ -1,0 +1,145 @@
+openapi: 3.0.0
+info:
+  title: API Poseidon
+  version: '1.0'
+servers:
+  - url: https://poseidon2api.idsjmk.cz/api
+paths:
+  /departures/gps:
+    post:
+      summary: Ottiene le informazioni delle fermate basate sulle coordinate GPS.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  description: Latitudine della posizione.
+                  example: 49.2317908
+                lng:
+                  type: number
+                  description: Longitudine della posizione.
+                  example: 16.5693803
+              required:
+                - lat
+                - lng
+      responses:
+        '200':
+          description: Restituisce le informazioni delle fermate vicine alla posizione fornita.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopsResponse'
+  /departures/busstops:
+    post:
+      summary: Ottiene le informazioni di partenza per le fermate specificate.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+              example: [175]
+              minItems: 1
+      responses:
+        '200':
+          description: Restituisce le informazioni di partenza per le fermate richieste.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopsResponse'
+components:
+  schemas:
+    StopsResponse:
+      type: object
+      properties:
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/StopDetail'
+        news:
+          type: string
+    StopDetail:
+      type: object
+      properties:
+        stop:
+          $ref: '#/components/schemas/StopInformation'
+        signs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BusStopSignDetail'
+        infoText:
+          type: array
+          items:
+            type: string
+          example: ["VÝLUKA MERHAUTOVA: Linky 44, 46, 72 a 84..."]
+    StopInformation:
+      type: object
+      properties:
+        id:
+          type: integer
+        number:
+          type: integer
+        zone:
+          type: integer
+        fullName:
+          type: string
+        chapsName:
+          type: string
+        busStopSign:
+          type: array
+          description: NON DOCUMENTATO, di solito è un array vuoto.
+          maxItems: 0
+          items:
+            type: object
+    BusStopSignDetail:
+      type: object
+      properties:
+        busStopSign:
+          $ref: '#/components/schemas/BusStopSign'
+        departures:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepartureInfo'
+    BusStopSign:
+      type: object
+      properties:
+        id:
+          type: integer
+        busStopId:
+          type: integer
+        number:
+          type: integer
+        description:
+          type: string
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        busStopSignBusStopTransportlink:
+          type: array
+          description: NON DOCUMENTATO, di solito è un array vuoto.
+          maxItems: 0
+          items:
+            type: object
+    Coordinates:
+      type: object
+      properties:
+        lng:
+          type: number
+        lat:
+          type: number
+    DepartureInfo:
+      type: object
+      properties:
+        link:
+          type: string
+        platform:
+          type: string
+        destinationStop:
+          type: string
+        time:
+          type: string
+        isOnline:
+          type: boolean
