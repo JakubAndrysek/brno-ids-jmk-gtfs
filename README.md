@@ -1,5 +1,11 @@
 # brno-gtfs
 
+This project is a simple web server that serves GTFS data for stops in Brno, Czech Republic.
+It is only prototype and it is not finished yet. Feee free to fork it and finish it.
+If you add new features, inform me about it.
+
+Forked from [Bitrey/brno-ids-jmk-gtfs](https://github.com/Bitrey/brno-ids-jmk-gtfs)
+
 To install dependencies:
 
 ```bash
@@ -36,5 +42,3 @@ Trips will be added in the future.
 
 
 This project was created using `bun init` in bun v1.0.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
-
-Forked from [Bitrey/brno-ids-jmk-gtfs](https://github.com/Bitrey/brno-ids-jmk-gtfs)
