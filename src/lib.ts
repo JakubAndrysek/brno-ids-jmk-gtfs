@@ -20,27 +20,27 @@ import { StopTripData } from "./interfaces/stopData";
 import anyAscii from "any-ascii";
 import { lineMap } from "./config/lineMap";
 
-class Gtfs {
-    private agency: Agency[] | undefined;
-    private calendar: Calendar[] | undefined;
-    private calendarDates: CalendarDates[] | undefined;
-    private routes: Route[] | undefined;
-    private stopTimes: StopTime[] | undefined;
-    private stops: Stop[] | undefined;
-    private trips: Trip[] | undefined;
+export class Gtfs {
+    public agency: Agency[] | undefined;
+    public calendar: Calendar[] | undefined;
+    public calendarDates: CalendarDates[] | undefined;
+    public routes: Route[] | undefined;
+    public stopTimes: StopTime[] | undefined;
+    public stops: Stop[] | undefined;
+    public trips: Trip[] | undefined;
 
-    private loadingPromise: Promise<void> | undefined;
+    public loadingPromise: Promise<void> | undefined;
 
-    private rtFeed:
+    public rtFeed:
         | GtfsRealtimeBindings.transit_realtime.FeedMessage
         | undefined;
-    private rtCacheDate: Moment | undefined;
+    public rtCacheDate: Moment | undefined;
 
     constructor() {
         this.loadingPromise = this.loadStaticGtfs();
     }
 
-    private async fetchStaticGtfs(): Promise<void> {
+    public async fetchStaticGtfs(): Promise<void> {
         if (this.gtfsExists()) {
             return;
         }
@@ -57,7 +57,7 @@ class Gtfs {
         });
     }
 
-    private async fetchRealtimeGtfs(): Promise<GtfsRealtimeBindings.transit_realtime.FeedMessage> {
+    public async fetchRealtimeGtfs(): Promise<GtfsRealtimeBindings.transit_realtime.FeedMessage> {
         if (this.rtFeed && this.rtCacheDate) {
             if (
                 moment().diff(this.rtCacheDate, "seconds") <
@@ -88,7 +88,7 @@ class Gtfs {
         return feed;
     }
 
-    private async getRealtimeForTrip(
+    public async getRealtimeForTrip(
         tripId: string,
     ): Promise<GtfsRealtimeBindings.transit_realtime.IFeedEntity | undefined> {
         const feed = await this.fetchRealtimeGtfs();
@@ -98,11 +98,11 @@ class Gtfs {
         return trip;
     }
 
-    private gtfsExists(): boolean {
+    public gtfsExists(): boolean {
         return fs.existsSync(config.gtfs.unzipPath.static);
     }
 
-    private async unzip(from: string, to: string): Promise<void> {
+    public async unzip(from: string, to: string): Promise<void> {
         logger.debug(`Unzipping ${from} to ${to}`);
         return new Promise((resolve, reject) => {
             const proc = Bun.spawn(["unzip", "-o", from, "-d", to], {
@@ -122,18 +122,18 @@ class Gtfs {
         });
     }
 
-    private async parseCsv(path: string): Promise<any[]> {
+    public async parseCsv(path: string): Promise<any[]> {
         // logger.debug(`Parsing CSV file ${path}`);
         return await csvToJson().fromFile(path);
     }
 
-    private async parseStaticGtfsFile<T>(fileName: string): Promise<T> {
+    public async parseStaticGtfsFile<T>(fileName: string): Promise<T> {
         return (await this.parseCsv(
             path.join(config.gtfs.unzipPath.static, fileName),
         )) as T;
     }
 
-    private async getStopTimesForStop(stopId: string): Promise<StopTime[]> {
+    public async getStopTimesForStop(stopId: string): Promise<StopTime[]> {
         if (!this.stopTimes) {
             await this.loadingPromise;
         }
@@ -143,7 +143,7 @@ class Gtfs {
         );
     }
 
-    private async getTripsForStop(stopId: string): Promise<Trip[]> {
+    public async getTripsForStop(stopId: string): Promise<Trip[]> {
         if (!this.trips) {
             await this.loadingPromise;
         }
@@ -155,7 +155,7 @@ class Gtfs {
         );
     }
 
-    private parseDepartureTime(departureTime: string): Moment {
+    public parseDepartureTime(departureTime: string): Moment {
         // hour might be > 24: https://gtfs.org/reference/static/#stop_timestxt
         const [hour] = departureTime.split(":").map(Number);
         if (hour >= 24) {
@@ -164,7 +164,7 @@ class Gtfs {
         return moment(departureTime, "H:mm:ss");
     }
 
-    private async getNextForStop(
+    public async getNextForStop(
         stopId: string,
         qty = 1,
     ): Promise<StopTripData[]> {
@@ -225,10 +225,10 @@ class Gtfs {
             if (
                 i > 0 &&
                 nextRoute?.route_short_name ===
-                    res[i - 1].route?.route_short_name &&
+                res[i - 1].route?.route_short_name &&
                 nextTrip?.trip_headsign === res[i - 1].trip?.trip_headsign &&
                 nextStopTimes[i].departure_time ===
-                    res[i - 1].stopTime?.departure_time
+                res[i - 1].stopTime?.departure_time
             ) {
                 nextStopTimes.splice(i, 1);
                 i--;
@@ -247,14 +247,18 @@ class Gtfs {
         return res;
     }
 
-    private async loadStaticGtfs(): Promise<void> {
+    public async loadStaticGtfs(): Promise<void> {
         logger.debug("GTFS does not exist, fetching");
-        await this.fetchStaticGtfs();
-        await this.unzip(
-            config.gtfs.downloadPath.static,
-            config.gtfs.unzipPath.static,
-        );
+        // await this.fetchStaticGtfs();
+        // await this.unzip(
+        //     config.gtfs.downloadPath.static,
+        //     config.gtfs.unzipPath.static,
+        // );
         logger.debug("GTFS fetched and unzipped");
+
+        // messure timeof parsing
+        const start = new Date().getTime();
+
         this.agency = await this.parseStaticGtfsFile<Agency[]>(
             config.gtfs.files.agency,
         );
@@ -276,22 +280,26 @@ class Gtfs {
         this.trips = await this.parseStaticGtfsFile<Trip[]>(
             config.gtfs.files.trips,
         );
+
+        const end = new Date().getTime();
+        logger.debug(`GTFS parsed in ${end - start}ms`);
+
         logger.debug("GTFS parsed");
     }
 
-    private getStopName(gtfsData?: StopTripData): string | undefined {
+    public getStopName(gtfsData?: StopTripData): string | undefined {
         return gtfsData?.stop?.stop_name;
     }
 
-    private getLineName(gtfsData?: StopTripData): string | undefined {
+    public getLineName(gtfsData?: StopTripData): string | undefined {
         return gtfsData?.route?.route_short_name;
     }
 
-    private getDestinationName(gtfsData?: StopTripData): string | undefined {
+    public getDestinationName(gtfsData?: StopTripData): string | undefined {
         return gtfsData?.trip?.trip_headsign;
     }
 
-    private getDepartureTimeHHMM(gtfsData?: StopTripData): string {
+    public getDepartureTimeHHMM(gtfsData?: StopTripData): string {
         const time = gtfsData?.stopTime?.departure_time;
         return time && this.parseDepartureTime(time).isValid()
             ? this.parseDepartureTime(time).format("HH:mm")
@@ -312,7 +320,7 @@ class Gtfs {
     //     return str;
     // }
 
-    private mapLine(line: any): string {
+    public mapLine(line: any): string {
         return line && line in lineMap
             ? lineMap[line as keyof typeof lineMap]
             : line;
@@ -352,7 +360,7 @@ class Gtfs {
 
         // return "|" + res.join("") + "|";
         res.sort();
-        return anyAscii(res.join(""));
+        return anyAscii(res.join("\n"));
     }
 }
 
